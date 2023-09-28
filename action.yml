@@ -24,7 +24,7 @@ runs:
         env:
           ENVS: ${{ inputs.envs }}
 
-        run: python scripts/check_envs.py $ENVS
+        run: python "${{ github.action_path }}/scripts/check_envs.py" $ENVS
 
 branding:
   icon: 'check-square'
