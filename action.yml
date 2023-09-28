@@ -1,0 +1,31 @@
+name: "Conda Env Check"
+description: "Checks conda env files and pin files for outdated packages"
+inputs:
+  envs:
+    description: "A RegExp that matches the file(s) where environment files are stored"
+    required: false
+    default: "^\./[^/]+\.ya?ml$"
+  conda_version:
+    description: "The version of conda to use"
+    required: false
+    default: ""
+
+runs:
+  using: "composite"
+  steps:
+      - name: setup-conda
+        uses: s-weigand/setup-conda@v1.2.1
+        with:
+          # Additional channels like 'conda-forge' which can be used to install packages
+          conda-channels: '' # optional, default is 
+      
+      - name: find-envs
+        shell: bash
+        env:
+          ENVS: ${{ inputs.envs }}
+
+        run: python scripts/check_envs.py $ENVS
+
+branding:
+  icon: 'check-square'
+  color: 'blue'
