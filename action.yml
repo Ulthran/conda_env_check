@@ -4,7 +4,7 @@ inputs:
   envs:
     description: "A RegExp that matches the file(s) where environment files are stored"
     required: false
-    default: "^\./[^/]+\.ya?ml$"
+    default: "*.yml|*.yaml|envs/*.yml|envs/*.yaml"
   conda_version:
     description: "The version of conda to use"
     required: false
