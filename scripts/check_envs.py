@@ -2,6 +2,7 @@
 # to find conda environment files. 
 
 import glob
+import json
 import os
 import requests
 import subprocess as sp
@@ -45,6 +46,8 @@ class Env():
         self.dependencies = [dep.split("<")[0] for dep in self.dependencies]
         self.dependencies = [dep.split(">")[0] for dep in self.dependencies]
 
+        self.updated_env = None
+
         with open(pin_fp, 'r') as f:
             self.pins = {}
             for line in f.readlines():
@@ -55,13 +58,30 @@ class Env():
         self.issues = []
 
     def check_env_create(self) -> bool:
-        args = ["conda", "env", "create", "-f", self.filename]
+        args = ["conda", "env", "create", "--file", self.filename, "--name", self.name, "--dry-run", "--json"]
         try:
-            sp.check_output(args, shell=True)
+            output = sp.check_output(args)
+            self.updated_env = json.loads(output.decode('utf-8'))
+            self.updated_env["dependencies"] = {s.split("::")[1].split("==")[0]: (s.split("/")[0], Version(s.split("==")[1].split("=")[0])) for s in self.updated_env["dependencies"]} # Dependency: (Channel, Version)
             return True
         except sp.CalledProcessError as e:
             self.issues.append([f"Could not create environment {self.name}", e.output])
             return False
+    
+    def check_updated_versions(self) -> bool:
+        if not self.updated_env:
+            self.warnings.append("No updated environment found")
+            return False
+        for dep in self.dependencies:
+            if dep in self.updated_env["dependencies"].keys():
+                channel, version = self.updated_env["dependencies"][dep]
+                current_channel, current_version = self.pins.get(dep)
+                if version.major != current_version.major:
+                    self.issues.append([f"Major version mismatch for {dep}", f"Current: {current_version}, Updated: {version}"])
+                    return False
+                if version.minor != current_version.minor:
+                    self.warnings.append(f"Minor version mismatch for {dep}. Current: {current_version}, Updated: {version}")
+        return True
         
     def check_latest_versions(self) -> bool:
         for dep in self.dependencies:
@@ -138,11 +158,22 @@ def find_pin_files(env_files: list) -> list:
 env_dirs = parse_args()
 env_files = find_env_files(env_dirs)
 pin_files = find_pin_files(env_files)
-for pin_file in pin_files:
-    env_file = [env_file for env_file in env_files if env_file.name in pin_file.name][0]
-    env = Env(env_file.fp, pin_file.fp)
-    env.check_env_create()
-    env.check_latest_versions()
-    print(env.name)
-    print(env.issues)
-    print(env.warnings)
+net_frac = 0
+for env_file in env_files:
+    env_pin_files = [pin_file for pin_file in pin_files if env_file.name in pin_file.name]
+    for pin_file in env_pin_files:
+        env = Env(env_file.fp, pin_file.fp)
+        env.check_env_create()
+        env.check_updated_versions()
+        env.check_latest_versions()
+        print(f"Environment: {env.name}")
+        print(f"Warnings: {env.warnings}")
+        print(f"Issues: {env.issues}")
+        frac = 1 - (0.9 * len(env.issues) + 0.1 * len(env.warnings)) / len(env.dependencies)
+        print(f"Fraction: {frac}")
+        net_frac += frac
+
+try:
+    print(f"Percentage: {round((net_frac / len(pin_files)) * 100)}%")
+except ZeroDivisionError:
+    pass

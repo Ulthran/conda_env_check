@@ -24,10 +24,31 @@ runs:
         run: pip install pyyaml bs4
       
       - name: find-envs
+        id: find-envs
         shell: bash
         env:
           ENVS: ${{ inputs.envs }}
-        run: python "${{ github.action_path }}/scripts/check_envs.py" $ENVS
+        run: |
+          OUTPUT=$(python "${{ github.action_path }}/scripts/check_envs.py" $ENVS)
+
+          PERC=$(echo "$OUTPUT" | grep -E '^Percentage:' | awk '{print $2}' | tr -d '%')
+          echo "::set-output name=perc::$PERC"
+
+          RED=$(printf "%02x" $((255 - $PERC*255/100)))
+          GREEN=$(printf "%02x" $(($PERC*255/100)))
+          COLOR=$RED$GREEN"00"
+          echo "::set-output name=color::$COLOR"
+
+          echo "$OUTPUT"
+      
+      - name: Percentage badge
+        uses: RubbaBoy/BYOB@v1.3.0
+        with:
+          NAME: env_check
+          LABEL: 'Conda Env Check'
+          STATUS: ${{ steps.find-envs.outputs.perc }}
+          COLOR: ${{ steps.find-envs.outputs.color }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 branding:
   icon: 'check-square'
