@@ -1,3 +1,148 @@
-import sys
+# Parse command line arguments from sys.argv and use the first arg as a comma-separted list of directories in which
+# to find conda environment files. 
 
-print(sys.argv)
+import glob
+import os
+import requests
+import subprocess as sp
+import sys
+import yaml
+from bs4 import BeautifulSoup
+from pathlib import Path
+
+class Version():
+    def __init__(self, version_str: str) -> None:
+        if "-" in version_str:
+            self.version = version_str.split("-")[1]
+        else:
+            self.version = version_str
+        self.major = self.version.split(".")[0]
+        try:
+            self.minor = self.version.split(".")[1]
+        except IndexError:
+            self.minor = None
+        try:
+            self.patch = self.version.split(".")[2]
+        except IndexError:
+            self.patch = None
+        try:
+            self.build = version_str.split("-")[2].split(".")[0]
+        except IndexError:
+            self.build = None
+
+    def __str__(self) -> str:
+        return self.version
+
+class Env():
+    def __init__(self, env_fp: Path, pin_fp: Path) -> None:
+        self.filename = env_fp
+        self.name = env_fp.stem
+        with open(env_fp, 'r') as f:
+            env_dict = yaml.safe_load(f)
+            self.channels = env_dict.get('channels')
+            self.dependencies = env_dict.get('dependencies')
+        self.dependencies = [dep.split("=")[0] for dep in self.dependencies]
+        self.dependencies = [dep.split("<")[0] for dep in self.dependencies]
+        self.dependencies = [dep.split(">")[0] for dep in self.dependencies]
+
+        with open(pin_fp, 'r') as f:
+            self.pins = {}
+            for line in f.readlines():
+                if any((d := dep) in line for dep in self.dependencies):
+                    self.pins[d] = (line.split("/")[3], Version(line.split("/")[5])) # (Channel, Version)
+
+        self.warnings = []
+        self.issues = []
+
+    def check_env_create(self) -> bool:
+        args = ["conda", "env", "create", "-f", self.filename]
+        try:
+            sp.check_output(args, shell=True)
+            return True
+        except sp.CalledProcessError as e:
+            self.issues.append([f"Could not create environment {self.name}", e.output])
+            return False
+        
+    def check_latest_versions(self) -> bool:
+        for dep in self.dependencies:
+            if dep in self.pins.keys():
+                channel, version = self.pins[dep]
+                latest_version = Version(self.get_latest_package_version(channel, dep))
+                if latest_version:
+                    if version.major != latest_version.major:
+                        self.issues.append([f"Major version mismatch for {dep}", f"Current: {version}, Latest: {latest_version}"])
+                        return False
+                    if version.minor != latest_version.minor:
+                        self.warnings.append(f"Minor version mismatch for {dep}. Current: {version}, Latest: {latest_version}")
+                else:
+                    self.warnings.append(f"Could not find latest version for {dep}")
+            else:
+                self.warnings.append(f"Could not find pin for {dep}")
+        return True
+
+    @staticmethod
+    def get_latest_package_version(channel, package):
+        # Create the URL for the Anaconda channel/package page
+        url = f"https://anaconda.org/{channel}/{package}"
+
+        # Send an HTTP GET request to the URL
+        response = requests.get(url)
+
+        # Check if the request was successful (status code 200)
+        if response.status_code == 200:
+            # Parse the HTML content of the page
+            soup = BeautifulSoup(response.text, 'html.parser')
+
+            # Find the element containing package version information
+            version_element = soup.find('small', class_='subheader')
+
+            if version_element:
+                # Extract the version information
+                version = version_element.text.strip()
+                return version
+
+        # If the request was not successful or version information was not found, return None
+        return None
+
+class EnvFile():
+    def __init__(self, fp: Path) -> None:
+        self.fp = fp
+        self.name = fp.stem
+
+class PinFile():
+    def __init__(self, fp: Path) -> None:
+        self.fp = fp
+        self.name = fp.stem
+
+def parse_args() -> list:
+    if len(sys.argv) < 2:
+        print('Usage: python check_envs.py <env_dirs>')
+        sys.exit(1)
+    return sys.argv[1].split(',')
+
+def find_env_files(env_dirs: list) -> list:
+    env_files = []
+    for env_dir in env_dirs:
+        for filename in os.listdir(env_dir):
+            if filename.endswith('.yaml') or filename.endswith('.yml'):
+                env_files.append(EnvFile(Path(env_dir) / filename))
+    return env_files
+
+def find_pin_files(env_files: list) -> list:
+    pin_files = []
+    for env_file in env_files:
+        for filename in glob.glob(f"{str(env_file.fp).replace('.yml', '.').replace('.yaml', '.')}*.pin.txt"):
+            pin_files.append(PinFile(Path(filename)))
+    return pin_files
+
+env_dirs = parse_args()
+env_files = find_env_files(env_dirs)
+pin_files = find_pin_files(env_files)
+for pin_file in pin_files:
+    env_file = [env_file for env_file in env_files if env_file.name in pin_file.name][0]
+    env = Env(env_file.fp, pin_file.fp)
+    env.check_env_create()
+    env.check_latest_versions()
+    print(env.name)
+    print(env.issues)
+    print(env.warnings)

@@ -2,9 +2,9 @@ name: "Conda Env Check"
 description: "Checks conda env files and pin files for outdated packages"
 inputs:
   envs:
-    description: "A RegExp that matches the file(s) where environment files are stored"
+    description: "A comma-separated list of directories where environment files are stored"
     required: false
-    default: "*.yml|*.yaml|envs/*.yml|envs/*.yaml"
+    default: "./"
   conda_version:
     description: "The version of conda to use"
     required: false
@@ -18,12 +18,15 @@ runs:
         with:
           # Additional channels like 'conda-forge' which can be used to install packages
           conda-channels: '' # optional, default is 
+
+      - name: install-deps
+        shell: bash
+        run: pip install pyyaml
       
       - name: find-envs
         shell: bash
         env:
           ENVS: ${{ inputs.envs }}
-
         run: python "${{ github.action_path }}/scripts/check_envs.py" $ENVS
 
 branding:
