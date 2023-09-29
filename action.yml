@@ -46,7 +46,7 @@ runs:
         with:
           NAME: env_check
           LABEL: 'Conda Env Check'
-          STATUS: ${{ steps.find-envs.outputs.perc }}
+          STATUS: "${{ steps.find-envs.outputs.perc }}%"
           COLOR: ${{ steps.find-envs.outputs.color }}
           GITHUB_TOKEN: ${{ github.token }}
 
