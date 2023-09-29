@@ -31,14 +31,19 @@ runs:
         run: |
           OUTPUT=$(python "${{ github.action_path }}/scripts/check_envs.py" $ENVS)
 
-          PERC=$(echo "$OUTPUT" | grep -E '^Percentage:' | awk '{print $2}' | tr -d '%')
-          echo "::set-output name=perc::$PERC"
+          if [[ $OUTPUT == *"FAIL"* ]]; then
+            echo "::set-output name=PERC::failing"
+            echo "::set-output name=COLOR::ff0000"
+          else
+            PERC=$(echo "$OUTPUT" | grep -E '^Percentage:' | awk '{print $2}' | tr -d '%')
+            echo "::set-output name=perc::$PERC%"
 
-          RED=$(printf "%02x" $((255 - $PERC*255/100)))
-          GREEN=$(printf "%02x" $(($PERC*255/100)))
-          COLOR=$RED$GREEN"00"
-          echo "::set-output name=color::$COLOR"
-
+            RED=$(printf "%02x" $((255 - $PERC*255/100)))
+            GREEN=$(printf "%02x" $(($PERC*255/100)))
+            COLOR=$RED$GREEN"00"
+            echo "::set-output name=color::$COLOR"
+          fi
+          
           echo "$OUTPUT"
       
       - name: Percentage badge
@@ -46,7 +51,7 @@ runs:
         with:
           NAME: env_check
           LABEL: 'Conda Env Check'
-          STATUS: "${{ steps.find-envs.outputs.perc }}%"
+          STATUS: "${{ steps.find-envs.outputs.perc }}"
           COLOR: ${{ steps.find-envs.outputs.color }}
           GITHUB_TOKEN: ${{ github.token }}
 

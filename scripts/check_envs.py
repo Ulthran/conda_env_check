@@ -169,7 +169,6 @@ env_dirs = parse_args()
 env_files = find_env_files(env_dirs)
 pin_files = find_pin_files(env_files)
 net_frac = 0
-FAIL = None
 for env_file in env_files:
     env_pin_files = [pin_file for pin_file in pin_files if env_file.name in pin_file.name]
     for pin_file in env_pin_files:
@@ -177,7 +176,7 @@ for env_file in env_files:
         try_pin = env.check_pin_env_create()
         try_solve = env.check_env_create()
         if not (try_pin or try_solve):
-            FAIL = f"Could not create environment {env.name} with pin or solve"
+            print(f"FAIL: Could not create environment {env.name} with pin or solve")
         env.check_updated_versions()
         env.check_latest_versions()
         print(f"Environment: {env.name}")
@@ -191,7 +190,3 @@ try:
     print(f"Percentage: {round((net_frac / len(pin_files)) * 100)}%")
 except ZeroDivisionError:
     pass
-
-if FAIL:
-    print(FAIL)
-    sys.exit(1)
