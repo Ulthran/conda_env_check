@@ -21,7 +21,7 @@ runs:
 
       - name: install-deps
         shell: bash
-        run: pip install pyyaml
+        run: pip install pyyaml bs4
       
       - name: find-envs
         shell: bash
