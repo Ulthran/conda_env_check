@@ -36,7 +36,8 @@ class Version():
 
 class Env():
     def __init__(self, env_fp: Path, pin_fp: Path) -> None:
-        self.filename = env_fp
+        self.env_fp = env_fp
+        self.pin_fp = pin_fp
         self.name = env_fp.stem
         with open(env_fp, 'r') as f:
             env_dict = yaml.safe_load(f)
@@ -57,8 +58,17 @@ class Env():
         self.warnings = []
         self.issues = []
 
+    def check_pin_env_create(self) -> bool:
+        args = ["conda", "env", "create", "--file", self.pin_fp, "--name", self.name, "--dry-run", "--json"]
+        try:
+            output = sp.check_output(args)
+            return True
+        except sp.CalledProcessError as e:
+            self.issues.append([f"Could not create environment {self.name} from pin", e.output])
+            return False
+                
     def check_env_create(self) -> bool:
-        args = ["conda", "env", "create", "--file", self.filename, "--name", self.name, "--dry-run", "--json"]
+        args = ["conda", "env", "create", "--file", self.env_fp, "--name", self.name, "--dry-run", "--json"]
         try:
             output = sp.check_output(args)
             self.updated_env = json.loads(output.decode('utf-8'))
@@ -159,11 +169,15 @@ env_dirs = parse_args()
 env_files = find_env_files(env_dirs)
 pin_files = find_pin_files(env_files)
 net_frac = 0
+FAIL = None
 for env_file in env_files:
     env_pin_files = [pin_file for pin_file in pin_files if env_file.name in pin_file.name]
     for pin_file in env_pin_files:
         env = Env(env_file.fp, pin_file.fp)
-        env.check_env_create()
+        try_pin = env.check_pin_env_create()
+        try_solve = env.check_env_create()
+        if not (try_pin or try_solve):
+            FAIL = f"Could not create environment {env.name} with pin or solve"
         env.check_updated_versions()
         env.check_latest_versions()
         print(f"Environment: {env.name}")
@@ -177,3 +191,7 @@ try:
     print(f"Percentage: {round((net_frac / len(pin_files)) * 100)}%")
 except ZeroDivisionError:
     pass
+
+if FAIL:
+    print(FAIL)
+    sys.exit(1)
