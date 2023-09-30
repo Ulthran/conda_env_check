@@ -144,6 +144,13 @@ class PinFile():
         self.fp = fp
         self.name = fp.stem
 
+        with open(fp, "r") as f:
+            lines = f.readlines()
+        with open(fp, "w") as f:
+            for line in lines:
+                if not (line.startswith("#") or line.startswith("@")):
+                    f.write(line)
+
 def parse_args() -> list:
     if len(sys.argv) < 2:
         print('Usage: python check_envs.py <env_dirs>')
@@ -175,13 +182,13 @@ for env_file in env_files:
         env = Env(env_file.fp, pin_file.fp)
         try_pin = env.check_pin_env_create()
         try_solve = env.check_env_create()
-        if not (try_pin or try_solve):
-            print(f"FAIL: Could not create environment {env.name} with pin or solve")
         env.check_updated_versions()
         env.check_latest_versions()
         print(f"Environment: {env.name}")
         print(f"Warnings: {env.warnings}")
         print(f"Issues: {env.issues}")
+        if not (try_pin or try_solve):
+            print(f"FAIL: Could not create environment {env.name} with pin or solve")
         frac = 1 - (0.9 * len(env.issues) + 0.1 * len(env.warnings)) / len(env.dependencies)
         print(f"Fraction: {frac}")
         net_frac += frac
