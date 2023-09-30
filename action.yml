@@ -19,6 +19,10 @@ runs:
           # Additional channels like 'conda-forge' which can be used to install packages
           conda-channels: '' # optional, default is 
 
+      - name: update-conda
+        shell: bash
+        run: conda --version
+
       - name: install-deps
         shell: bash
         run: pip install pyyaml bs4
@@ -43,7 +47,7 @@ runs:
             COLOR=$RED$GREEN"00"
             echo "::set-output name=color::$COLOR"
           fi
-          
+
           echo "$OUTPUT"
       
       - name: Percentage badge
@@ -54,6 +58,11 @@ runs:
           STATUS: "${{ steps.find-envs.outputs.perc }}"
           COLOR: ${{ steps.find-envs.outputs.color }}
           GITHUB_TOKEN: ${{ github.token }}
+
+      - name: Exit
+        shell: bash
+        if: steps.find-envs.outputs.perc == 'failing'
+        run: exit 1
 
 branding:
   icon: 'check-square'
