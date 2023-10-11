@@ -9,6 +9,10 @@ inputs:
     description: "The version of conda to use"
     required: false
     default: ""
+  lite:
+    description: "Whether to use the conda solvers (false) or not (true)"
+    required: false
+    default: "false"
 
 runs:
   using: "composite"
@@ -32,8 +36,9 @@ runs:
         shell: bash
         env:
           ENVS: ${{ inputs.envs }}
+          LITE: ${{ inputs.lite }}
         run: |
-          OUTPUT=$(python "${{ github.action_path }}/scripts/check_envs.py" $ENVS)
+          OUTPUT=$(python "${{ github.action_path }}/scripts/check_envs.py" $ENVS $LITE)
 
           if [[ $OUTPUT == *"FAIL"* ]]; then
             echo "::set-output name=PERC::failing"
