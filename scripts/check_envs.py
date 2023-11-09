@@ -233,15 +233,26 @@ def find_pin_files(env_files: list) -> list:
             pin_files.append(PinFile(Path(filename)))
     return pin_files
 
-
+print("Starting...")
 env_dirs, lite = parse_args()
 env_files = find_env_files(env_dirs)
 pin_files = find_pin_files(env_files)
 net_frac = 0
+percentage = 0
+
+if not env_files:
+    print("No environment files found")
+    percentage = 100
+
+if not pin_files:
+    print(f"No pin files found")
+    percentage = 100
+
 for env_file in env_files:
     env_pin_files = [
         pin_file for pin_file in pin_files if env_file.name in pin_file.name
     ]
+
     for pin_file in env_pin_files:
         env = Env(env_file.fp, pin_file.fp)
 
@@ -268,4 +279,4 @@ for env_file in env_files:
 try:
     print(f"Percentage: {round((net_frac / len(pin_files)) * 100)}%")
 except ZeroDivisionError:
-    pass
+    print(f"Percentage: {percentage}%")
