@@ -12,7 +12,7 @@ inputs:
   lite:
     description: "Whether to use the conda solvers (false) or not (true)"
     required: false
-    default: "false"
+    default: "true"
 
 runs:
   using: "composite"
@@ -38,19 +38,19 @@ runs:
           ENVS: ${{ inputs.envs }}
           LITE: ${{ inputs.lite }}
         run: |
-          OUTPUT=$(python "${{ github.action_path }}/scripts/check_envs.py" $ENVS $LITE)
+          OUTPUT=$(python "${{ github.action_path }}/scripts/check_envs.py" $ENVS $LITE 2>&1)
 
           if [[ $OUTPUT == *"FAIL"* ]]; then
-            echo "::set-output name=PERC::failing"
-            echo "::set-output name=COLOR::ff0000"
+            echo "PERC=failing" >> $GITHUB_OUTPUT
+            echo "COLOR=ff0000" >> $GITHUB_OUTPUT
           else
             PERC=$(echo "$OUTPUT" | grep -E '^Percentage:' | awk '{print $2}' | tr -d '%')
-            echo "::set-output name=perc::$PERC%"
+            echo "PERC=$PERC%" >> $GITHUB_OUTPUT
 
             RED=$(printf "%02x" $((255 - $PERC*255/100)))
             GREEN=$(printf "%02x" $(($PERC*255/100)))
             COLOR=$RED$GREEN"00"
-            echo "::set-output name=color::$COLOR"
+            echo "COLOR=$COLOR" >> $GITHUB_OUTPUT
           fi
 
           echo "$OUTPUT"
