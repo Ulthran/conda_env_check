@@ -20,9 +20,9 @@ class Version:
             self.version = version_str.split("-")[0]
         else:
             self.version = version_str
-        if set("1234567890.") != set(self.version):
+        if not set(self.version).issubset(set("0123456789.")):
             raise ValueError(
-                "Version string must only contain numbers and periods (other than anything after a dash)"
+                f"Version string must only contain numbers and periods (other than anything after a dash)\n{version_str}"
             )
 
         self.major = self.version.split(".")[0]
@@ -71,6 +71,8 @@ class EnvFile:
     def __init__(self, fp: Path) -> None:
         self.fp = fp
         self.name = fp.stem
+        print(f"EnvFile: {self.name}")
+
         self.env_created = lite
         with open(fp, "r") as f:
             env_dict = yaml.safe_load(f)
@@ -92,6 +94,8 @@ class EnvFile:
             self.parse_dependecy(dep) for dep in self.dependencies if type(dep) == str
         ]
         self.dependencies = {d[0]: d[1] for d in self.dependencies}
+        print(self.dependencies)
+        self.dependencies = {d: v for d, v in self.dependencies.items() if d != "python"}
         # End up with a dictionary of dependencies and their max versions (as specified in the env file)
 
         self.updated_env = None
@@ -154,6 +158,8 @@ class PinFile:
     def __init__(self, fp: Path, env_file: EnvFile) -> None:
         self.fp = fp
         self.name = fp.stem
+        print(f"PinFile: {self.name}")
+
         self.env_file = env_file
         self.pin_created = lite
 
@@ -165,6 +171,8 @@ class PinFile:
                         line.split("/")[3],
                         Version(line.split("/")[5].split("-")[1]),
                     )  # Dictionary of form {Dependency: (Channel, Version)}
+        
+        print(self.pins)
 
         self.updated_pins = None
 
@@ -215,10 +223,11 @@ class PinFile:
         for dep in self.env_file.dependencies.keys():
             if dep in self.pins.keys():
                 channel, version = self.pins[dep]
-                latest_version = Version(get_latest_package_version(channel, dep))
+                latest_version = get_latest_package_version(channel, dep)
                 if latest_version:
                     if (
                         version.major != latest_version.major
+                        and self.env_file.dependencies[dep]
                         and version.major != self.env_file.dependencies[dep].major
                     ):
                         print(
@@ -256,7 +265,7 @@ def find_pin_files(env_files: List[EnvFile]) -> List[PinFile]:
         for filename in glob.glob(
             f"{str(env_file.fp).replace('.yml', '.').replace('.yaml', '.')}*.pin.txt"
         ):
-            pin_files.append(PinFile(Path(filename)), env_file)
+            pin_files.append(PinFile(Path(filename), env_file))
     return pin_files
 
 
