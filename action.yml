@@ -39,6 +39,7 @@ runs:
           LITE: ${{ inputs.lite }}
         run: |
           OUTPUT=$(python "${{ github.action_path }}/scripts/check_envs.py" $ENVS $LITE 2>&1) || true
+          echo "MADE IT"
 
           if [[ $OUTPUT == *"FAIL"* ]]; then
             echo "PERC=failing" >> $GITHUB_OUTPUT

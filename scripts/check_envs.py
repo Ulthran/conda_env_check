@@ -71,6 +71,7 @@ class EnvFile:
     def __init__(self, fp: Path) -> None:
         self.fp = fp
         self.name = fp.stem
+        self.env_created = lite
         with open(fp, "r") as f:
             env_dict = yaml.safe_load(f)
             self.channels = env_dict.get("channels", [])
@@ -123,6 +124,7 @@ class EnvFile:
             except KeyError:
                 print(f"No dependencies found for {self.name}")
                 self.updated_env["dependencies"] = {}
+            self.env_created = True
             return True
         except sp.CalledProcessError as e:
             print(f"Could not create environment {self.name}")
@@ -147,6 +149,7 @@ class PinFile:
         self.fp = fp
         self.name = fp.stem
         self.env_file = env_file
+        self.pin_created = lite
 
         self.pins = {}
         with open(fp, "r") as f:
@@ -173,6 +176,7 @@ class PinFile:
         ]
         try:
             output = sp.check_output(args)
+            self.pin_created = True
             return True
         except sp.CalledProcessError as e:
             print(f"Could not create environment {self.name} from pin")
@@ -302,5 +306,10 @@ for env_file in env_files:
             try_solve = env_file.check_env_create()
             if not try_solve:
                 percentage -= 1 / total_files
+
+# Check that at least one env create method was successful for each env/platform
+for pin_file in pin_files:
+    if not (pin_file.pin_created and pin_file.env_file.env_created):
+        print(f"FAIL: Could not create any env for {pin_file.name}")
 
 print(f"Percentage: {percentage}%")
