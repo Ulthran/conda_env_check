@@ -134,12 +134,18 @@ class EnvFile:
     def parse_dependecy(d: str) -> Tuple[str, Version | None]:
         """Parse a dependency string and return a tuple of the dependency name and the max version is it allowed to be by the env file (or None if there is no max version)"""
         dependency = d.split("=")[0].split("<")[0].split(">")[0].strip()
+        max = None
+        v = None
         if "<" in d or "=" in d:
+            if "<" in d:
+                v = d.split("<")[1]
+            if "=" in d:
+                v = d.split("=")[1]
             # This will be off by one if given a version like 3.0.0 (returns 3, should be 2) but I'm just gonna ignore that for now
             try:
-                max = Version(d.split("<")[1].split("=")[1].strip())
+                max = Version(v.strip())
             except ValueError:
-                max = None
+                pass
 
         return (dependency, max)
 
