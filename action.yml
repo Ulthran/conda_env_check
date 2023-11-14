@@ -53,6 +53,7 @@ runs:
             echo "COLOR=$COLOR" >> $GITHUB_OUTPUT
           fi
 
+          echo "$OUTPUT" > $GITHUB_STEP_SUMMARY
           echo "$OUTPUT"
       
       - name: Percentage badge
