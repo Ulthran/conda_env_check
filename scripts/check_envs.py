@@ -94,7 +94,7 @@ class EnvFile:
             self.parse_dependecy(dep) for dep in self.dependencies if type(dep) == str
         ]
         self.dependencies = {d[0]: d[1] for d in self.dependencies}
-        print({k: str(v) for k, v in self.dependencies})
+        print({k: str(v) for k, v in self.dependencies.items()})
         self.dependencies = {d: v for d, v in self.dependencies.items() if d != "python"}
         # End up with a dictionary of dependencies and their max versions (as specified in the env file)
 
@@ -172,7 +172,7 @@ class PinFile:
                         Version(line.split("/")[5].split("-")[1]),
                     )  # Dictionary of form {Dependency: (Channel, Version)}
         
-        print({k: str(v) for k, v in self.pins})
+        print({k: str(v[1]) for k, v in self.pins.items()})
 
         self.updated_pins = None
 
