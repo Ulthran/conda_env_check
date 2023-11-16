@@ -18,6 +18,8 @@ class Version:
         """Takes in a string of the form "1" or "1.2.3" or "1.2.3-456abc" and parses it into major, minor, patch, and build attributes"""
         if "-" in version_str:
             self.version = version_str.split("-")[0]
+        elif "_" in version_str:
+            self.version = version_str.split("_")[0]
         else:
             self.version = version_str
         if not set(self.version).issubset(set("0123456789.")):
@@ -166,10 +168,10 @@ class PinFile:
         self.pins = {}
         with open(fp, "r") as f:
             for line in f.readlines():
-                if any((d := dep) in line for dep in self.env_file.dependencies):
-                    self.pins[d] = (
+                if any((d := f"/{dep}-") in line for dep in self.env_file.dependencies):
+                    self.pins[d[1:][:-1]] = (
                         line.split("/")[3],
-                        Version(line.split(d)[1].split("-")[1]),
+                        Version(line.split(d)[1].split("-")[0]),
                     )  # Dictionary of form {Dependency: (Channel, Version)}
         
         print({k: str(v[1]) for k, v in self.pins.items()})
