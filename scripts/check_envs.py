@@ -169,7 +169,7 @@ class PinFile:
                 if any((d := dep) in line for dep in self.env_file.dependencies):
                     self.pins[d] = (
                         line.split("/")[3],
-                        Version(line.split("/")[5].split("-")[1]),
+                        Version(line.split(d)[1].split("-")[1]),
                     )  # Dictionary of form {Dependency: (Channel, Version)}
         
         print({k: str(v[1]) for k, v in self.pins.items()})
