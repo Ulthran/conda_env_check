@@ -29,7 +29,9 @@ runs:
 
       - name: update-conda
         shell: bash
-        run: conda --version
+        run: |
+          conda --version
+          conda install -c conda-forge -c bioconda mamba snakedeploy
 
       - name: install-deps
         shell: bash
