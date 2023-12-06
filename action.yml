@@ -44,7 +44,7 @@ runs:
           ENVS: ${{ inputs.envs }}
           LITE: ${{ inputs.lite }}
         run: |
-          python scripts/check_envs.py $ENVS $LITE /tmp/OUT
+          conda-env-check --envs $ENVS --out /tmp/OUT $( (( $LITE )) && printf %s '--lite' )
           OUTPUT=$(cat /tmp/OUT)
 
           if [[ $OUTPUT == *"FAIL"* ]]; then

@@ -17,12 +17,16 @@ class Version:
         try:
             self.minor = int(self.version.split(".")[1])
         except (IndexError, ValueError):
-            print(f"Minor version either doesn't exist or isn't parseable as an int\n{version_str}")
+            print(
+                f"Minor version either doesn't exist or isn't parseable as an int\n{version_str}"
+            )
             self.minor = None
         try:
             self.patch = int(self.version.split(".")[2])
         except (IndexError, ValueError):
-            print(f"Patch version either doesn't exist or isn't parseable as an int\n{version_str}")
+            print(
+                f"Patch version either doesn't exist or isn't parseable as an int\n{version_str}"
+            )
             self.patch = None
         try:
             self.build = version_str.split("-")[1]
