@@ -28,12 +28,27 @@ class Version:
 
     def __str__(self) -> str:
         return self.version
-    
+
     def __equals__(self, other) -> bool:
-        return self.major == other.major and self.minor == other.minor and self.patch == other.patch and self.build == other.build
-    
+        if not other:
+            return False
+        return (
+            self.major == other.major
+            and self.minor == other.minor
+            and self.patch == other.patch
+            and self.build == other.build
+        )
+
     def same_major(self, other) -> bool:
+        if not other:
+            return False
         return self.major == other.major
-    
+
     def same_version(self, other) -> bool:
-        return self.major == other.major and self.minor == other.minor and self.patch == other.patch
+        if not other:
+            return False
+        return (
+            self.major == other.major
+            and self.minor == other.minor
+            and self.patch == other.patch
+        )

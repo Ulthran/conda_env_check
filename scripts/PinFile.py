@@ -5,6 +5,7 @@ from . import get_latest_package_version
 from .EnvFile import EnvFile
 from .Version import Version
 
+
 class PinFile:
     def __init__(self, fp: Path, env_file: EnvFile, lite: bool = False) -> None:
         self.fp = fp
@@ -22,7 +23,7 @@ class PinFile:
                         line.split("/")[3],
                         Version(line.split(d)[1].split("-")[0]),
                     )  # Dictionary of form {Dependency: (Channel, Version)}
-        
+
         print({k: str(v[1]) for k, v in self.pins.items()})
 
         self.updated_pins = None
@@ -76,11 +77,9 @@ class PinFile:
                 channel, version = self.pins[dep]
                 latest_version = get_latest_package_version(channel, dep)
                 if latest_version:
-                    if (
-                        version.major != latest_version.major
-                        and self.env_file.dependencies[dep]
-                        and version.major != self.env_file.dependencies[dep].major
-                    ):
+                    if not version.same_major(
+                        latest_version
+                    ) and not version.same_major(self.env_file.dependencies[dep]):
                         print(
                             f"Major version mismatch for {dep}"
                             f"Current: {version}, Latest: {latest_version}"

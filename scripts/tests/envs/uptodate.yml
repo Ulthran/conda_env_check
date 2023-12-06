@@ -1,5 +1,5 @@
 name: uptodate
 channels:
-  - conda-forge
+  - anaconda
 dependencies:
-  - cutadapt =4
+  - pandas =2

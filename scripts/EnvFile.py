@@ -6,6 +6,7 @@ from typing import Tuple
 
 from .Version import Version
 
+
 class EnvFile:
     def __init__(self, fp: Path, lite: bool = False) -> None:
         self.fp = fp
@@ -34,7 +35,9 @@ class EnvFile:
         ]
         self.dependencies = {d[0]: d[1] for d in self.dependencies}
         print({k: str(v) for k, v in self.dependencies.items()})
-        self.dependencies = {d: v for d, v in self.dependencies.items() if d != "python"}
+        self.dependencies = {
+            d: v for d, v in self.dependencies.items() if d != "python"
+        }
         # End up with a dictionary of dependencies and their max versions (as specified in the env file)
 
         self.updated_env = None
