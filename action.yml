@@ -12,6 +12,10 @@ inputs:
   lite:
     description: "Whether to use the conda solvers (false) or not (true)"
     required: false
+    default: "false"
+  fix:
+    description: "Whether to fix the environment files or not"
+    required: false
     default: "true"
 
 runs:
@@ -64,6 +68,16 @@ runs:
           STATUS: "${{ steps.find-envs.outputs.perc }}"
           COLOR: ${{ steps.find-envs.outputs.color }}
           GITHUB_TOKEN: ${{ github.token }}
+      
+      - name: Create Pull Request
+        if: steps.find-envs.outputs.perc != '100%'
+        uses: peter-evans/create-pull-request@v5
+        with:
+          commit-message: 'Update environment files'
+          committer: CondaEnvChecker <noreply@github.com>
+          branch: conda-env-check/patch
+          title: 'Update Conda Envs'
+          body: ''
 
       - name: Exit
         shell: bash
