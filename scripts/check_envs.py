@@ -5,19 +5,19 @@ import glob
 import os
 import sys
 from pathlib import Path
+from typing import List
 
-from .Env import Env
-from .File import EnvFile, PinFile
+from .EnvFile import EnvFile, PinFile
 
 
-def parse_args() -> list:
+def parse_args() -> List[str | bool]:
     if len(sys.argv) < 3:
         print("Usage: python check_envs.py <env_dirs> <lite>")
         sys.exit(1)
     return (sys.argv[1].split(","), bool(sys.argv[2]))
 
 
-def find_env_files(env_dirs: list) -> list:
+def find_env_files(env_dirs: List[str]) -> List[EnvFile]:
     env_files = []
     for env_dir in env_dirs:
         for filename in os.listdir(env_dir):
@@ -26,48 +26,72 @@ def find_env_files(env_dirs: list) -> list:
     return env_files
 
 
-def find_pin_files(env_files: list) -> list:
+def find_pin_files(env_files: List[EnvFile], lite: bool) -> List[PinFile]:
     pin_files = []
     for env_file in env_files:
         for filename in glob.glob(
             f"{str(env_file.fp).replace('.yml', '.').replace('.yaml', '.')}*.pin.txt"
         ):
-            pin_files.append(PinFile(Path(filename)))
+            pin_files.append(PinFile(Path(filename), env_file, lite))
     return pin_files
 
 
+print("Starting...")
 env_dirs, lite = parse_args()
+percentage = 100
+
+# Create EnvFiles for all available env files
 env_files = find_env_files(env_dirs)
-pin_files = find_pin_files(env_files)
-net_frac = 0
-for env_file in env_files:
-    env_pin_files = [
-        pin_file for pin_file in pin_files if env_file.name in pin_file.name
-    ]
-    for pin_file in env_pin_files:
-        env = Env(env_file.fp, pin_file.fp)
 
+if not env_files:
+    print("No environment files found")
+    print(f"Percentage: {percentage}%")
+    sys.exit(0)
+
+# Create PinFiles for all available pin files (every PinFile should be linked to an EnvFile)
+pin_files = find_pin_files(env_files, lite)
+
+# Designate percentages
+lite_factor = 1 if lite else 3
+total_files = len(env_files) + len(pin_files) * lite_factor
+
+if not pin_files:
+    print(f"No pin files found")
+else:
+    # Iterate over PinFiles
+    for pin_file in pin_files:
+        # Check that pinned envs can be created
         if not lite:
-            try_pin = env.check_pin_env_create()
-            try_solve = env.check_env_create()
-            if not (try_pin or try_solve):
-                print(
-                    f"FAIL: Could not create environment {env.name} with pin or solve"
-                )
+            try_pin = pin_file.check_pin_env_create()
+            if not try_pin:
+                percentage -= 1 / total_files
+        # Check that snakedeploy pin-conda-envs doesn't update major versions of packages and PR if it does
+        if not lite:
+            try_pin = pin_file.pin_env()
+            if try_pin:
+                compare = pin_file.compare_updated_pins()
+                if compare:
+                    print(f"PR: {pin_file.name}")
+            else:
+                percentage -= 1 / total_files
+        # Check that created envs major versions are up to date with latest
+        compare = pin_file.check_latest_versions()
+        if not compare:
+            percentage -= 1 / total_files
 
-        env.check_updated_versions()
-        env.check_latest_versions()
-        print(f"Environment: {env.name}")
-        print(f"Warnings: {env.warnings}")
-        print(f"Issues: {env.issues}")
+# Iterate over EnvFiles and check that envs can be created
+for env_file in env_files:
+    # Check that created envs major versions are up to date with latest
+    if not lite:
+        # Only run if no pin file (redundant with pin_file.pin_env())
+        if not env_file.should_have_pin:
+            try_solve = env_file.check_env_create()
+            if not try_solve:
+                percentage -= 1 / total_files
 
-        frac = 1 - (0.9 * len(env.issues) + 0.1 * len(env.warnings)) / len(
-            env.dependencies
-        )
-        print(f"Fraction: {frac}")
-        net_frac += frac
+# Check that at least one env create method was successful for each env/platform
+for pin_file in pin_files:
+    if not (pin_file.pin_created and pin_file.env_file.env_created):
+        print(f"FAIL: Could not create any env for {pin_file.name}")
 
-try:
-    print(f"Percentage: {round((net_frac / len(pin_files)) * 100)}%")
-except ZeroDivisionError:
-    pass
+print(f"Percentage: {percentage}%")

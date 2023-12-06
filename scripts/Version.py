@@ -1,9 +1,17 @@
 class Version:
     def __init__(self, version_str: str) -> None:
+        """Takes in a string of the form "1" or "1.2.3" or "1.2.3-456abc" and parses it into major, minor, patch, and build attributes"""
         if "-" in version_str:
-            self.version = version_str.split("-")[1]
+            self.version = version_str.split("-")[0]
+        elif "_" in version_str:
+            self.version = version_str.split("_")[0]
         else:
             self.version = version_str
+        if not set(self.version).issubset(set("0123456789.")):
+            raise ValueError(
+                f"Version string must only contain numbers and periods (other than anything after a dash)\n{version_str}"
+            )
+
         self.major = self.version.split(".")[0]
         try:
             self.minor = self.version.split(".")[1]
@@ -14,7 +22,7 @@ class Version:
         except IndexError:
             self.patch = None
         try:
-            self.build = version_str.split("-")[2].split(".")[0]
+            self.build = version_str.split("-")[1]
         except IndexError:
             self.build = None
 
