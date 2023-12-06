@@ -71,9 +71,10 @@ def main(argv=None):
             if not lite:
                 try_pin = pin_file.pin_env()
                 if try_pin:
-                    compare = pin_file.compare_updated_pins()
-                    if compare:
-                        out.write(f"PR: {pin_file.name}")
+                    pass
+                    #compare = pin_file.compare_updated_pins()
+                    #if compare:
+                    #    out.write(f"PR: {pin_file.name}")
                 else:
                     percentage -= 1 / total_files
             # Check that created envs major versions are up to date with latest

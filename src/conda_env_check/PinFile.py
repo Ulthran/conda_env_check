@@ -21,7 +21,9 @@ class PinFile:
                 if any((d := f"/{dep}-") in line for dep in self.env_file.dependencies):
                     self.pins[d[1:][:-1]] = (
                         line.split("/")[3],
-                        Version(line.split(d)[1].split("-")[0]),
+                        Version(
+                            line.split(d)[1].split("-")[list(d).count("-")]
+                        ),  # list(d).count("-") This term accounts for dependency names with arbitrary numbers of dashes
                     )  # Dictionary of form {Dependency: (Channel, Version)}
 
         print({k: str(v[1]) for k, v in self.pins.items()})
