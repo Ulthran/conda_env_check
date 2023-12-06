@@ -17,12 +17,12 @@ def parse_args() -> List[str | bool]:
     return (sys.argv[1].split(","), bool(sys.argv[2]))
 
 
-def find_env_files(env_dirs: List[str]) -> List[EnvFile]:
+def find_env_files(env_dirs: List[str], lite: bool) -> List[EnvFile]:
     env_files = []
     for env_dir in env_dirs:
         for filename in os.listdir(env_dir):
             if filename.endswith(".yaml") or filename.endswith(".yml"):
-                env_files.append(EnvFile(Path(env_dir) / filename))
+                env_files.append(EnvFile(Path(env_dir) / filename, lite))
     return env_files
 
 
@@ -41,7 +41,7 @@ env_dirs, lite = parse_args()
 percentage = 100
 
 # Create EnvFiles for all available env files
-env_files = find_env_files(env_dirs)
+env_files = find_env_files(env_dirs, lite)
 
 if not env_files:
     print("No environment files found")

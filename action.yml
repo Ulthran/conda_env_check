@@ -29,7 +29,7 @@ runs:
 
       - name: install-deps
         shell: bash
-        run: pip install pyyaml bs4
+        run: pip install -r requirements.txt
       
       - name: find-envs
         id: find-envs

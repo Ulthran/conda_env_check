@@ -1,0 +1,5 @@
+name: uptodate
+channels:
+  - conda-forge
+dependencies:
+  - cutadapt =4

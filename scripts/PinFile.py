@@ -6,7 +6,7 @@ from .EnvFile import EnvFile
 from .Version import Version
 
 class PinFile:
-    def __init__(self, fp: Path, env_file: EnvFile, lite: bool) -> None:
+    def __init__(self, fp: Path, env_file: EnvFile, lite: bool = False) -> None:
         self.fp = fp
         self.name = fp.stem
         print(f"PinFile: {self.name}")

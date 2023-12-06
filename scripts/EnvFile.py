@@ -7,7 +7,7 @@ from typing import Tuple
 from .Version import Version
 
 class EnvFile:
-    def __init__(self, fp: Path) -> None:
+    def __init__(self, fp: Path, lite: bool = False) -> None:
         self.fp = fp
         self.name = fp.stem
         print(f"EnvFile: {self.name}")
@@ -30,7 +30,7 @@ class EnvFile:
             > 0
         )
         self.dependencies = [
-            self.parse_dependecy(dep) for dep in self.dependencies if type(dep) == str
+            self.parse_dependency(dep) for dep in self.dependencies if type(dep) == str
         ]
         self.dependencies = {d[0]: d[1] for d in self.dependencies}
         print({k: str(v) for k, v in self.dependencies.items()})
@@ -74,7 +74,7 @@ class EnvFile:
             return False
 
     @staticmethod
-    def parse_dependecy(d: str) -> Tuple[str, Version | None]:
+    def parse_dependency(d: str) -> Tuple[str, Version | None]:
         """Parse a dependency string and return a tuple of the dependency name and the max version is it allowed to be by the env file (or None if there is no max version)"""
         dependency = d.split("=")[0].split("<")[0].split(">")[0].strip()
         max = None
