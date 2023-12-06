@@ -10,11 +10,11 @@ from typing import List
 from .EnvFile import EnvFile, PinFile
 
 
-def parse_args() -> List[str | bool]:
-    if len(sys.argv) < 3:
-        print("Usage: python check_envs.py <env_dirs> <lite>")
+def parse_args() -> List[str | bool | Path]:
+    if len(sys.argv) < 4:
+        print("Usage: python check_envs.py <env_dirs> <lite> <out>")
         sys.exit(1)
-    return (sys.argv[1].split(","), bool(sys.argv[2]))
+    return (sys.argv[1].split(","), bool(sys.argv[2]), Path(sys.argv[3]))
 
 
 def find_env_files(env_dirs: List[str], lite: bool) -> List[EnvFile]:
@@ -37,15 +37,16 @@ def find_pin_files(env_files: List[EnvFile], lite: bool) -> List[PinFile]:
 
 
 print("Starting...")
-env_dirs, lite = parse_args()
+env_dirs, lite, out_fp = parse_args()
+out = open(out_fp, "w")
 percentage = 100
 
 # Create EnvFiles for all available env files
 env_files = find_env_files(env_dirs, lite)
 
 if not env_files:
-    print("No environment files found")
-    print(f"Percentage: {percentage}%")
+    out.write("No environment files found")
+    out.write(f"Percentage: {percentage}%")
     sys.exit(0)
 
 # Create PinFiles for all available pin files (every PinFile should be linked to an EnvFile)
@@ -56,7 +57,7 @@ lite_factor = 1 if lite else 3
 total_files = len(env_files) + len(pin_files) * lite_factor
 
 if not pin_files:
-    print(f"No pin files found")
+    out.write(f"No pin files found")
 else:
     # Iterate over PinFiles
     for pin_file in pin_files:
@@ -71,7 +72,7 @@ else:
             if try_pin:
                 compare = pin_file.compare_updated_pins()
                 if compare:
-                    print(f"PR: {pin_file.name}")
+                    out.write(f"PR: {pin_file.name}")
             else:
                 percentage -= 1 / total_files
         # Check that created envs major versions are up to date with latest
@@ -92,6 +93,7 @@ for env_file in env_files:
 # Check that at least one env create method was successful for each env/platform
 for pin_file in pin_files:
     if not (pin_file.pin_created and pin_file.env_file.env_created):
-        print(f"FAIL: Could not create any env for {pin_file.name}")
+        out.write(f"FAIL: Could not create any env for {pin_file.name}")
 
-print(f"Percentage: {percentage}%")
+out.write(f"Percentage: {percentage}%")
+out.close()

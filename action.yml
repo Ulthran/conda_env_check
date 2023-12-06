@@ -42,7 +42,8 @@ runs:
           ENVS: ${{ inputs.envs }}
           LITE: ${{ inputs.lite }}
         run: |
-          OUTPUT=$(python "${{ github.action_path }}/scripts/check_envs.py" $ENVS $LITE 2>&1)
+          python "${{ github.action_path }}/scripts/check_envs.py" $ENVS $LITE /tmp/OUT
+          OUTPUT=$(cat /tmp/OUT)
 
           if [[ $OUTPUT == *"FAIL"* ]]; then
             echo "PERC=failing" >> $GITHUB_OUTPUT
