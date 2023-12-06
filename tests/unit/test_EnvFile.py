@@ -1,6 +1,6 @@
 from pathlib import Path
-from scripts.EnvFile import EnvFile
-from scripts.Version import Version
+from src.conda_env_check.EnvFile import EnvFile
+from src.conda_env_check.Version import Version
 
 
 envs_fp = Path(__file__).parent.parent / "envs"

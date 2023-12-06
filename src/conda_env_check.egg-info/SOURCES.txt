@@ -1,0 +1,15 @@
+LICENSE
+README.md
+pyproject.toml
+src/conda_env_check/EnvFile.py
+src/conda_env_check/PinFile.py
+src/conda_env_check/Version.py
+src/conda_env_check/__init__.py
+src/conda_env_check/check_envs.py
+src/conda_env_check/cli.py
+src/conda_env_check.egg-info/PKG-INFO
+src/conda_env_check.egg-info/SOURCES.txt
+src/conda_env_check.egg-info/dependency_links.txt
+src/conda_env_check.egg-info/entry_points.txt
+src/conda_env_check.egg-info/requires.txt
+src/conda_env_check.egg-info/top_level.txt

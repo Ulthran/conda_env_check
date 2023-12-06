@@ -1,8 +1,8 @@
 import requests
 from bs4 import BeautifulSoup
-
 from .Version import Version
 
+__version__ = "1.0.0"
 
 def get_latest_package_version(channel: str, package: str) -> Version | None:
     # Create the URL for the Anaconda channel/package page

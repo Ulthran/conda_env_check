@@ -7,19 +7,22 @@ class Version:
             self.version = version_str.split("_")[0]
         else:
             self.version = version_str
-        if not set(self.version).issubset(set("0123456789.")):
-            raise ValueError(
-                f"Version string must only contain numbers and periods (other than anything after a dash)\n{version_str}"
-            )
 
-        self.major = self.version.split(".")[0]
         try:
-            self.minor = self.version.split(".")[1]
-        except IndexError:
+            self.major = int(self.version.split(".")[0])
+        except ValueError:
+            raise ValueError(
+                f"The major version has to be parseable as an int\n{version_str}"
+            )
+        try:
+            self.minor = int(self.version.split(".")[1])
+        except (IndexError, ValueError):
+            print(f"Minor version either doesn't exist or isn't parseable as an int\n{version_str}")
             self.minor = None
         try:
-            self.patch = self.version.split(".")[2]
-        except IndexError:
+            self.patch = int(self.version.split(".")[2])
+        except (IndexError, ValueError):
+            print(f"Patch version either doesn't exist or isn't parseable as an int\n{version_str}")
             self.patch = None
         try:
             self.build = version_str.split("-")[1]

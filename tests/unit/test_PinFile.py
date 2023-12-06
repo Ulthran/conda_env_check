@@ -1,6 +1,6 @@
-from scripts.PinFile import PinFile
-from scripts.EnvFile import EnvFile
-from scripts.Version import Version
+from src.conda_env_check.PinFile import PinFile
+from src.conda_env_check.EnvFile import EnvFile
+from src.conda_env_check.Version import Version
 from pathlib import Path
 import pytest
 

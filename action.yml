@@ -33,7 +33,9 @@ runs:
 
       - name: install-deps
         shell: bash
-        run: pip install -r "${{ github.action_path }}/requirements.txt"
+        run: |
+          pip install "${{ github.action_path }}"
+          pip install pytest
       
       - name: find-envs
         id: find-envs
@@ -42,7 +44,6 @@ runs:
           ENVS: ${{ inputs.envs }}
           LITE: ${{ inputs.lite }}
         run: |
-          cd ${{ github.action_path }}
           python scripts/check_envs.py $ENVS $LITE /tmp/OUT
           OUTPUT=$(cat /tmp/OUT)
 

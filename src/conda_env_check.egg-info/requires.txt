@@ -1,0 +1,9 @@
+bs4
+pyyaml
+
+[dev]
+black
+
+[test]
+pytest
+pytest-cov

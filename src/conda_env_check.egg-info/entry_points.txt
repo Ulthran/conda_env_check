@@ -1,0 +1,2 @@
+[console_scripts]
+conda-env-check = conda_env_check.cli:main

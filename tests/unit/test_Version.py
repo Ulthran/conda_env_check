@@ -1,4 +1,4 @@
-from scripts.Version import Version
+from src.conda_env_check.Version import Version
 
 
 def test_version_with_major_minor_patch():
