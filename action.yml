@@ -42,7 +42,8 @@ runs:
           ENVS: ${{ inputs.envs }}
           LITE: ${{ inputs.lite }}
         run: |
-          python "${{ github.action_path }}/scripts/check_envs.py" $ENVS $LITE /tmp/OUT
+          cd ${{ github.action_path }}
+          python scripts/check_envs.py $ENVS $LITE /tmp/OUT
           OUTPUT=$(cat /tmp/OUT)
 
           if [[ $OUTPUT == *"FAIL"* ]]; then
