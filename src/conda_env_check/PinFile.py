@@ -60,10 +60,12 @@ class PinFile:
             with open(self.fp, "r") as f:
                 self.updated_pins = {}
                 for line in f.readlines():
-                    if any((d := dep) in line for dep in self.env_file.dependencies):
-                        self.updated_pins[d] = (
+                    if any(
+                        (d := f"/{dep}-") in line for dep in self.env_file.dependencies
+                    ):
+                        self.pins[d[1:][:-1]] = (
                             line.split("/")[3],
-                            Version(line.split("/")[5].split("-")[1]),
+                            Version(line.split(d)[1].split("-")[0]),
                         )  # Dictionary of form {Dependency: (Channel, Version)}
 
             return True
