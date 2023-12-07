@@ -1,0 +1,5 @@
+name: uptodate
+channels:
+  - anaconda
+dependencies:
+  - pandas =2

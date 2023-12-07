@@ -12,6 +12,10 @@ inputs:
   lite:
     description: "Whether to use the conda solvers (false) or not (true)"
     required: false
+    default: "false"
+  fix:
+    description: "Whether to fix the environment files or not"
+    required: false
     default: "true"
 
 runs:
@@ -25,11 +29,15 @@ runs:
 
       - name: update-conda
         shell: bash
-        run: conda --version
+        run: |
+          conda --version
+          conda install -c conda-forge -c bioconda mamba snakedeploy
 
       - name: install-deps
         shell: bash
-        run: pip install pyyaml bs4
+        run: |
+          pip install "${{ github.action_path }}"
+          pip install pytest
       
       - name: find-envs
         id: find-envs
@@ -38,7 +46,8 @@ runs:
           ENVS: ${{ inputs.envs }}
           LITE: ${{ inputs.lite }}
         run: |
-          OUTPUT=$(python "${{ github.action_path }}/scripts/check_envs.py" $ENVS $LITE 2>&1)
+          conda-env-check --envs $ENVS --out /tmp/OUT $( (( $LITE )) && printf %s '--lite' )
+          OUTPUT=$(cat /tmp/OUT)
 
           if [[ $OUTPUT == *"FAIL"* ]]; then
             echo "PERC=failing" >> $GITHUB_OUTPUT
@@ -64,6 +73,16 @@ runs:
           STATUS: "${{ steps.find-envs.outputs.perc }}"
           COLOR: ${{ steps.find-envs.outputs.color }}
           GITHUB_TOKEN: ${{ github.token }}
+      
+      - name: Create Pull Request
+        if: steps.find-envs.outputs.perc != '100%'
+        uses: peter-evans/create-pull-request@v5
+        with:
+          commit-message: 'Update environment files'
+          committer: CondaEnvChecker <noreply@github.com>
+          branch: conda-env-check/patch
+          title: 'Update Conda Envs'
+          body: ''
 
       - name: Exit
         shell: bash

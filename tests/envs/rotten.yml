@@ -1,0 +1,4 @@
+channels:
+  - anaconda
+dependencies:
+  - pandas-but-psych-it-doesnt-exist-hahahahaha =1500000
