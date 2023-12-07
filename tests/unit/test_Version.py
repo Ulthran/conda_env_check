@@ -3,23 +3,23 @@ from src.conda_env_check.Version import Version
 
 def test_version_with_major_minor_patch():
     version = Version("1.2.3")
-    assert version.major == "1"
-    assert version.minor == "2"
-    assert version.patch == "3"
+    assert version.major == 1
+    assert version.minor == 2
+    assert version.patch == 3
     assert version.build is None
 
 
 def test_version_with_major_minor_patch_build():
     version = Version("1.2.3-456abc")
-    assert version.major == "1"
-    assert version.minor == "2"
-    assert version.patch == "3"
+    assert version.major == 1
+    assert version.minor == 2
+    assert version.patch == 3
     assert version.build == "456abc"
 
 
 def test_version_with_major_only():
     version = Version("1")
-    assert version.major == "1"
+    assert version.major == 1
     assert version.minor is None
     assert version.patch is None
     assert version.build is None
@@ -27,8 +27,8 @@ def test_version_with_major_only():
 
 def test_version_with_major_minor():
     version = Version("1.2")
-    assert version.major == "1"
-    assert version.minor == "2"
+    assert version.major == 1
+    assert version.minor == 2
     assert version.patch is None
     assert version.build is None
 
@@ -55,7 +55,7 @@ def test_version_with_underscore_separator():
 
 def test_version_with_no_separator():
     version = Version("123")
-    assert version.major == "123"
+    assert version.major == 123
     assert version.minor is None
     assert version.patch is None
     assert version.build is None

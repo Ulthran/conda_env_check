@@ -72,8 +72,8 @@ def main(argv=None):
                 try_pin = pin_file.pin_env()
                 if try_pin:
                     pass
-                    #compare = pin_file.compare_updated_pins()
-                    #if compare:
+                    # compare = pin_file.compare_updated_pins()
+                    # if compare:
                     #    out.write(f"PR: {pin_file.name}")
                 else:
                     percentage -= 1 / total_files

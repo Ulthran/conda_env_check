@@ -21,8 +21,8 @@ def outofdate_env_file():
 
 
 @pytest.fixture
-def rotten_env_file():
-    env_file = EnvFile(envs_fp / "rotten.yml")
+def tricky_env_file():
+    env_file = EnvFile(envs_fp / "tricky.yml")
     return env_file
 
 
@@ -47,3 +47,9 @@ def test_check_latest_versions_outofdate(outofdate_env_file):
     fp = envs_fp / "outofdate.linux-64.pin.txt"
     pinfile = PinFile(fp, outofdate_env_file)
     assert pinfile.check_latest_versions() == False
+
+
+def test_check_latest_versions_tricky(tricky_env_file):
+    fp = envs_fp / "tricky.linux-64.pin.txt"
+    pinfile = PinFile(fp, tricky_env_file)
+    assert pinfile.check_latest_versions() == True
